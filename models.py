@@ -1,7 +1,6 @@
-#models.py
 import json
-from datetime import datetime, timezone
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, asdict
+
 
 @dataclass
 class Task:
@@ -13,25 +12,29 @@ class Task:
     due_date: str | None = None
     tag: str | None = None
     active: bool = True
-    
+
     def to_dict(self) -> dict:
-        data = asdict(self)
-        return data
+        return asdict(self)
 
     @staticmethod
-    def from_dict(data: dict) -> 'Task':
+    def from_dict(data: dict) -> "Task":
         return Task(
-            id=data['id'],
-            title=data['title'],
-            priority=data['priority'],
-            created_at=data.get('created_at', None), 
-            description=data.get('description', None),
-            due_date=data.get('due_date', None),
-            tag=data.get('tag', None),
-            active=data.get('active', True)
+            id=data["id"],
+            title=data["title"],
+            priority=data["priority"],
+            created_at=data.get("created_at"),
+            description=data.get("description"),
+            due_date=data.get("due_date"),
+            tag=data.get("tag"),
+            active=data.get("active", True)
         )
 
     def display_info(self) -> str:
         task_dict = self.to_dict()
-        task_dict['status'] = "todo" if self.active else "done"
-        return json.dumps(task_dict, indent=4, ensure_ascii=False)
+        task_dict["status"] = "todo" if self.active else "done"
+
+        return json.dumps(
+            task_dict,
+            indent=4,
+            ensure_ascii=False
+        )
