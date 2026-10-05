@@ -1,200 +1,257 @@
-# پروژه مدیریت وظایف (Task Manager)
+# Task Manager
 
-## مقدمه
+A desktop task management application built with **Python and PyQt6**.
 
-این پروژه یک برنامه خط فرمان (Command-Line Interface) برای مدیریت وظایف روزمره است. کاربران می‌توانند با استفاده از این برنامه، وظایف جدید ایجاد کنند، وظایف موجود را مشاهده، ویرایش یا حذف نمایند و همچنین داده‌های خود را از فایل‌های JSON وارد یا به آن‌ها صادر کنند.
+The application allows users to create, edit, delete, search, sort, and manage tasks while keeping data persistent through JSON files. It also supports task import/export and includes automated unit tests for the core application logic.
 
-تمام داده‌ها در فایلی به نام `data.json` ذخیره می‌شوند؛ بنابراین پس از خروج از برنامه، اطلاعات از بین نخواهد رفت.
+## Features
 
----
+* Create, edit, and delete tasks
+* Set task priority: `low`, `medium`, or `high`
+* Add descriptions, tags, and due dates
+* Mark tasks as active or completed
+* Search tasks by title or tag
+* Case-insensitive search
+* Sort tasks by priority or status
+* Validate task titles, priorities, and due dates
+* Persist tasks using JSON
+* Import tasks from JSON files
+* Export tasks to JSON files
+* Light and dark themes
+* Automated unit testing
 
-## ساختار پروژه (Project Structure)
+## Architecture
 
-ساختار کلی پوشه‌ها و فایل‌های پروژه به صورت زیر است:
+The project follows a simple **layered architecture** that separates presentation, business logic, validation, data access, and the domain model.
 
-Todo/
+```text
+┌──────────────────────┐
+│      PyQt6 GUI       │
+│   Presentation Layer │
+└──────────┬───────────┘
+           │
+           ▼
+┌──────────────────────┐
+│     TaskManager      │
+│   Business Logic     │
+└───────┬────────┬─────┘
+        │        │
+        ▼        ▼
+┌────────────┐  ┌────────────────┐
+│   Task     │  │ TaskValidator  │
+│   Model    │  │   Validation   │
+└────────────┘  └────────────────┘
+        │
+        ▼
+┌──────────────────────┐
+│   DataRepository     │
+│   Data Access Layer  │
+└──────────┬───────────┘
+           │
+           ▼
+      ┌──────────┐
+      │ JSON     │
+      │ Storage  │
+      └──────────┘
+```
 
+### Main Components
+
+| Component            | Responsibility                          |
+| -------------------- | --------------------------------------- |
+| `main_gui.py`        | Application entry point and GUI         |
+| `task_manager.py`    | Core business logic and task operations |
+| `task_validation.py` | Input validation                        |
+| `repository.py`      | JSON data persistence                   |
+| `models.py`          | `Task` domain model                     |
+| `tests.py`           | Automated unit tests                    |
+
+This separation improves **readability, maintainability, and testability** while keeping the core logic independent from the GUI and storage implementation.
+
+## Project Structure
+
+```text
+task-manager/
 │
-
-├── main.py                     # نقطه ورود برنامه و منوی اصلی
-
-├── models.py                   # تعریف کلاس Task (مدل داده)
-
-├── repository.py               # مدیریت ذخیره‌سازی و بارگذاری JSON
-
-├── task_validator.py           # اعتبارسنجی ورودی‌های کاربر
-
-├── task_adder.py               # منطق افزودن وظیفه جدید
-
-├── task_viewer.py              # منطق نمایش و فیلتر وظایف
-
-├── task_edit.py                # منطق ویرایش وظایف
-
-├── task_delete.py              # منطق حذف وظیفه و بازآرایی شناسه‌ها
-
-├── task_import_export.py       #  JSON (ورود و خروج) انتقال تسک ها بین برنامه و فایل‌های
-
+├── main_gui.py
+├── models.py
+├── repository.py
+├── task_manager.py
+├── task_validation.py
+├── tests.py
 │
+├── data.json
+├── import.json
+├── theme.txt
+├── requirements.txt
+├── .gitignore
+└── README.md
+```
 
-├── data.json                   # فایل اصلی ذخیره تسک ها
+## Task Model
 
-├── import.json                 # فایل نمونه برای وارد کردن فایل ورودی
+Each task is represented by the `Task` dataclass.
 
-└── export.json                 # فایل نمونه برای خروجی گرفتن 
+| Field         | Type          | Description                |
+| ------------- | ------------- | -------------------------- |
+| `id`          | `int`         | Unique task identifier     |
+| `title`       | `str`         | Task title                 |
+| `description` | `str \| None` | Optional description       |
+| `priority`    | `str`         | `low`, `medium`, or `high` |
+| `due_date`    | `str \| None` | Optional due date          |
+| `tag`         | `str \| None` | Optional task tag          |
+| `created_at`  | `str`         | Task creation date         |
+| `active`      | `bool`        | Task completion status     |
+
+Tasks are converted to dictionaries for JSON persistence and reconstructed as `Task` objects when loaded.
+
+## Data Validation
+
+User input is validated before tasks are created or updated.
+
+Current validation includes:
+
+* Task titles cannot be empty.
+* Task titles must meet a minimum length.
+* Priority must be one of:
+
+  * `low`
+  * `medium`
+  * `high`
+* Due dates must follow the `YYYY-MM-DD` format.
+
+## Data Persistence
+
+Task data is stored in JSON format.
+
+The `DataRepository` is responsible for:
+
+* Loading tasks from JSON files
+* Converting JSON data into `Task` objects
+* Saving tasks to JSON
+* Handling missing data files
+* Handling invalid JSON data
+
+If the main data file does not exist, the application starts with an empty task list.
+
+## Import and Export
+
+The application supports transferring tasks between JSON files.
+
+### Import
+
+Tasks can be imported from another JSON file.
+
+Imported tasks receive new IDs to prevent conflicts with existing tasks.
+
+### Export
+
+The current task list can be exported to a JSON file for backup or transfer.
+
+## Testing
+
+The project includes automated unit tests covering the main business logic.
+
+Test coverage includes:
+
+* Task creation
+* Invalid titles
+* Invalid priorities
+* Invalid due dates
+* Task editing
+* Task deletion
+* Task lookup
+* Sorting
+* Searching
+* Case-insensitive search
+* JSON persistence
+
+Run the test suite with:
+
+```bash
+python -m unittest tests.py -v
+```
+
+The current test suite contains **16 tests**.
+
+## Technologies
+
+* **Python 3.10+**
+* **PyQt6**
+* **JSON**
+* **unittest**
+* **Object-Oriented Programming**
+* **Dataclasses**
+
+## Installation
+
+Clone the repository:
+
+```bash
+git clone https://github.com/nioovns/task-manager.git
+cd task-manager
+```
+
+Create a virtual environment:
+
+```powershell
+python -m venv .venv
+```
+
+Activate it on Windows:
+
+```powershell
+.venv\Scripts\activate
+```
+
+Install the dependencies:
+
+```powershell
+pip install -r requirements.txt
+```
+
+Run the application:
+
+```powershell
+python main_gui.py
+```
+
+## Requirements
+
+* Python 3.10 or higher
+* PyQt6
+
+## Future Improvements
+
+Possible future improvements include:
+
+* Database-backed persistence
+* Task categories
+* Recurring tasks
+* Notifications and reminders
+* Advanced filtering
+* Additional automated tests
+* More modular GUI components
+* Improved logging and error handling
+
+## What I Learned
+
+This project provided practical experience with:
+
+* Object-oriented programming in Python
+* Dataclasses
+* Layered application architecture
+* Separation of concerns
+* Input validation
+* JSON-based data persistence
+* CRUD operations
+* Import/export workflows
+* GUI development with PyQt6
+* Automated unit testing
+* Writing maintainable and testable application logic
 
 
-### معماری داخلی
+## Contributors
 
-این پروژه از معماری **لایه‌بندی شده (Layered Architecture)** پیروی می‌کند:
-
-| لایه | فایل(ها) | مسئولیت |
-|------|----------|---------|
-| لایه ارائه | `main.py` | ارتباط با کاربر و نمایش منو |
-| لایه منطق کسب و کار | `task_adder.py`, `task_viewer.py`, `task_edit.py`, `task_delete.py`, `task_import_export.py` | اجرای عملیات اصلی |
-| لایه اعتبارسنجی | `task_validator.py` | بررسی و پالایش ورودی‌ها |
-| لایه دسترسی به داده | `repository.py` | خواندن و نوشتن در فایل JSON |
-| لایه مدل | `models.py` | تعریف ساختار داده |
-
-این تفکیک باعث افزایش **خوانایی، قابلیت نگهداری** و **تست‌پذیری** کد شده است.
-
----
-
-## فایل‌های پروژه و وظیفه هر یک
-
-| نام فایل | وظیفه |
-|----------|-------|
-| `main.py` | مدیریت منوی اصلی و اجرای برنامه |
-| `models.py` | تعریف ساختار داده‌ای Task |
-| `repository.py` | عملیات ذخیره‌سازی و بازیابی از فایل JSON |
-| `task_validator.py` | اعتبارسنجی ورودی‌های کاربر |
-| `task_adder.py` | افزودن وظیفه جدید |
-| `task_viewer.py` | نمایش وظایف و اعمال فیلتر |
-| `task_edit.py` | ویرایش وظایف موجود |
-| `task_delete.py` | حذف وظیفه و بازآرایی شناسه‌ها |
-| `task_import_export.py` | JSON (ورود و خروج) انتقال تسک ها بین برنامه و فایل‌های |
-
----
-
-## مدل داده (Task)
-
-در فایل `models.py` کلاسی به نام `Task` تعریف شده است که هر وظیفه دارای ویژگی‌های زیر می‌باشد:
-
-| فیلد | معنی | نوع داده | 
-|------|------|----------|
-| `id` | شناسه یکتا | int |
-| `title` | عنوان وظیفه | str |
-| `description` | توضیحات تکمیلی | str یا None|
-| `priority` | اولویت | str |
-| `due_date` | تاریخ سررسید | str یا None |
-| `tag` | برچسب دسته‌بندی | str یا None |
-| `created_at` | تاریخ ایجاد | str |
-| `active` | وضعیت انجام | bool |
-
----
-
-## قابلیت‌های برنامه
-
-پس از اجرای برنامه، منوی زیر نمایش داده می‌شود:
-
-1.Add Task
-
-2.List Tasks
-
-3.Edit Task
-
-4.Delete Task
-
-5.Import Tasks
-
-6.Export Tasks
-
-7.Exit
-
-
-
-### ۱. افزودن تسک
-
-کاربر عنوان، توضیحات، اولویت، تاریخ سررسید و برچسب را وارد می‌کند. سپس برنامه یک شیء Task جدید با شناسه بعدی ساخته و آن را در فایل `data.json` ذخیره می‌نماید.
-
-### ۲. نمایش تسک
-
-کاربر می‌تواند بر اساس سه معیار زیر فیلتر اعمال کند:
-- وضعیت (todo/done)
-- اولویت (low/medium/high)
-- برچسب (tag)
-
-پس از اعمال فیلترها، لیست تسک های مربوطه نمایش داده می‌شود.
-
-### ۳. ویرایش تسک
-
-کاربر شناسه تسک مورد نظر را وارد می‌کند. سپس می‌تواند هر یک از فیلدها را تغییر دهد. در صورت عدم ورود مقدار جدید، مقدار قبلی حفظ می‌شود.
-
-### ۴. حذف تسک
-
-پس از وارد کردن شناسه تسک، اطلاعات آن نمایش داده شده و تأیید نهایی از کاربر دریافت می‌شود. در صورت تأیید، تسک حذف و شناسه تمام وظایف بازآرایی می‌گردد.
-
-### ۵. وارد کردن فایل ورودی (Import)
-
-کاربر نام فایل JSON مبدأ را وارد می‌کند. برنامه تسک های موجود در آن فایل را خوانده و به `data.json` اضافه می‌کند. شناسه‌های جدید به‌گونه‌ای محاسبه می‌شوند که با شناسه‌های موجود تداخل پیدا نکنند.
-
-### ۶. خروجی گرفتن (Export)
-
-تمامی تسک های موجود در `data.json` در فایلی جدید (پیش‌فرض `export.json`) ذخیره می‌شوند.
-
-### ۷. خروج
-
-برنامه پایان می‌یابد.
-
----
-
-## نکات فنی
-
-- تاریخ‌ها با فرمت استاندارد `YYYY-MM-DD` ذخیره می‌شوند.
-- در صورت نبود فایل `data.json`، برنامه بدون بروز خطا اجرا شده و از یک لیست خالی شروع می‌کند.
-- عملیات حذف شامل مرحله تأیید جهت جلوگیری از حذف ناخواسته است.
-- در عملیات (Import) ، اگر فایل مورد نظر وجود نداشته باشد یا فرمت آن معتبر نباشد، پیام خطای مناسب نمایش داده شده و برنامه به کار خود ادامه می‌دهد.
-- مقادیر وضعیت (active) در پشت‌صحنه به صورت بولین (True/False) ذخیره می‌شوند، اما در نمایش به کاربر به ترتیب به صورت "todo" و "done" تبدیل می‌گردند.
-
----
-
-## نحوه اجرا
-
-برای اجرای برنامه، کافی است در ترمینال دستور زیر را وارد کنید:
-
-python main.py
-
-هیچ کتابخانه خارجی مورد نیاز نیست؛ تنها وجود پایتون نسخه ۳.۱۰ یا بالاتر الزامی است.
-
-نمونه داده‌ها
-محتویات فایل data.json به صورت زیر است:
-
-json
-[
-    {
-        "id": 1,
-        "title": "shopping",
-        "priority": "low",
-        "created_at": "2026-04-10 ",
-        "description": null,
-        "due_date": "2015-02-12",
-        "tag": null,
-        "active": true
-    }
-]
-
-
-جمع‌بندی
-این پروژه مفاهیم زیر را پوشش می‌دهد:
-
-کار با فایل‌های JSON
-
-برنامه‌نویسی شیء‌گرا در پایتون
-
-ماژولارنویسی
-
-دریافت و اعتبارسنجی ورودی از کاربر
-
-کار با تاریخ و زمان
-
-پیاده‌سازی عملیات CRUD (Create, Read, Update, Delete)
-
+- **Newsha Varnaseri** — Co-developer
+- **Bahar Taheripour** — Co-developer
