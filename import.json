@@ -1,0 +1,22 @@
+[
+    {
+        "id": 1,
+        "title": "exercise",
+        "priority": "high",
+        "created_at": "2026-04-10 ",
+        "description": "go to gym",
+        "due_date": "2026-04-13",
+        "tag": "gym",
+        "active": true
+    },
+    {
+        "id": 2,
+        "title": "shopping",
+        "priority": "low",
+        "created_at": "2026-04-10 ",
+        "description": "go shopping with your sister",
+        "due_date": "",
+        "tag": "shop",
+        "active": true
+    }
+]
